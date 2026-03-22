@@ -1,3 +1,5 @@
 .env
 .DS_Store
 PROJECT_REQUIREMENTS.md
+supabase/migrations/20260321195500_initial_imdb_like_schema.sql
+supabase/migrations/20260321203000_remove_query_templates_and_saved_queries.sql

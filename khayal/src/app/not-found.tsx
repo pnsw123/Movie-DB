@@ -16,14 +16,14 @@ export default function NotFound() {
           This fantasy got lost.
         </h1>
         <p className="text-sm text-[var(--cream-muted)] max-w-sm mx-auto mb-8">
-          The reel you were looking for isn't in the archive.
+          The reel you were looking for isn't in the catalog.
           Someone may have rewound too far.
         </p>
         <Link
           href="/browse"
           className="inline-flex items-center gap-2 h-11 px-5 rounded-sm bg-[var(--saffron)] text-[var(--ink)] text-sm font-medium hover:bg-[var(--saffron-glow)] transition-colors shadow-[0_0_18px_-6px_var(--saffron)]"
         >
-          ← Back to The Archive
+          ← Back home
         </Link>
       </div>
     </div>

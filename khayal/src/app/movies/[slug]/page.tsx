@@ -56,7 +56,7 @@ export default async function MovieDetailPage({
           href="/browse"
           className="inline-flex items-center gap-2 text-[11px] font-mono tracking-[0.25em] uppercase text-[var(--cream-muted)] hover:text-[var(--saffron)] transition-colors mb-8"
         >
-          <ArrowLeft size={12} /> The Archive
+          <ArrowLeft size={12} /> Back
         </Link>
 
         {/* ─── Title block ─── */}

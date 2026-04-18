@@ -74,7 +74,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: Promi
           <p className="flex items-center gap-3 mb-2 text-[11px] font-mono tracking-[0.3em] uppercase text-[var(--saffron)]">
             <span className="font-arabic text-base tracking-normal">خيال</span>
             <span className="h-px w-6 bg-[var(--saffron)]/40" />
-            The Cinema Index
+            A cinema index
           </p>
           <h1 className="font-display text-3xl md:text-4xl text-[var(--cream)]">
             What are you looking for?
@@ -142,7 +142,7 @@ export default async function BrowsePage({ searchParams }: { searchParams: Promi
       <section className="mt-4">
         <div className="flex items-baseline justify-between mb-5">
           <h2 className="font-display text-xl md:text-2xl text-[var(--cream)]">
-            {filtersActive ? "Filtered results" : "Browse the full archive"}
+            {filtersActive ? "Filtered results" : "All films"}
           </h2>
           <span className="font-mono text-[11px] tracking-[0.2em] uppercase text-[var(--cream-muted)]">
             {grid.length} shown

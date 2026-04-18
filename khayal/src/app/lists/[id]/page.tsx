@@ -62,7 +62,7 @@ export default async function ListPage({
         href={isOwner ? "/profile" : "/browse"}
         className="inline-flex items-center gap-2 text-[11px] font-mono tracking-[0.25em] uppercase text-[var(--cream-muted)] hover:text-[var(--saffron)] transition-colors mb-8"
       >
-        <ArrowLeft size={12} /> {isOwner ? "Your profile" : "The Archive"}
+        <ArrowLeft size={12} /> {isOwner ? "Your profile" : "Home"}
       </Link>
 
       <header className="flex items-end justify-between gap-4 mb-10 pb-8 border-b border-[var(--taupe)]/15">

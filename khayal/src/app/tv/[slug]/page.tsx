@@ -54,7 +54,7 @@ export default async function TvDetailPage({
           href="/browse"
           className="inline-flex items-center gap-2 text-[11px] font-mono tracking-[0.25em] uppercase text-[var(--cream-muted)] hover:text-[var(--saffron)] transition-colors mb-8"
         >
-          <ArrowLeft size={12} /> The Archive
+          <ArrowLeft size={12} /> Back
         </Link>
 
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] lg:grid-cols-[300px_1fr] gap-8 lg:gap-12 mb-14">

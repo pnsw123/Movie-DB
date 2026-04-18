@@ -14,12 +14,10 @@ export async function Nav() {
 
   const links = user
     ? [
-        { href: "/browse",   label: "Archive"  },
         { href: "/search",   label: "Search"   },
         { href: "/profile",  label: "Profile"  },
       ]
     : [
-        { href: "/browse",   label: "Archive"  },
         { href: "/search",   label: "Search"   },
       ];
 

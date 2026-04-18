@@ -49,20 +49,18 @@ export function TicketEnter({ className }: { className?: string }) {
     <Link
       href="/login"
       className={cn(
-        "group relative inline-flex items-center gap-3 h-11 pl-4 pr-5",
-        "text-[11px] font-mono tracking-[0.32em] uppercase",
+        "group relative inline-flex items-center gap-2 md:gap-3 h-10 md:h-11 px-3 md:pl-4 md:pr-5",
+        "text-[10px] md:text-[11px] font-mono tracking-[0.15em] md:tracking-[0.32em] uppercase",
         "text-[var(--ink)] bg-[var(--saffron)]",
         "transition-all duration-300",
         "hover:bg-[var(--saffron-glow)]",
-        // corner notches via clip-path — ticket-stub geometry
         "[clip-path:polygon(8px_0,calc(100%-8px)_0,100%_8px,100%_calc(100%-8px),calc(100%-8px)_100%,8px_100%,0_calc(100%-8px),0_8px)]",
         "shadow-[0_0_22px_-6px_var(--saffron)]",
         className,
       )}
     >
       <span className="font-semibold">Enter</span>
-
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[var(--ink)] group-hover:translate-x-0.5 transition-transform">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="hidden sm:block text-[var(--ink)] group-hover:translate-x-0.5 transition-transform">
         <path d="M3 8 H13 M9 4 L13 8 L9 12" />
       </svg>
     </Link>

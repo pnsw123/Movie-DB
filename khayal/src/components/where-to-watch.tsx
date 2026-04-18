@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Play } from "lucide-react";
 
 export interface WhereToWatchProps {
   title: string;
@@ -6,17 +6,22 @@ export interface WhereToWatchProps {
 }
 
 /**
- * Minimal "where to watch" affordance. KHAYAL doesn't stream anything —
- * this hands the user off to external lookup (JustWatch + a direct search
- * on their nearest streaming sources).
+ * "Where to watch" + "Watch trailer" hand-off block.
+ * KHAYAL is an index — it doesn't stream. These links send the user to the
+ * right external source (trailer on YouTube, rentals via JustWatch, credits
+ * via Letterboxd / IMDb).
  */
 export function WhereToWatch({ title, year }: WhereToWatchProps) {
-  const q = encodeURIComponent(`${title} ${year ?? ""}`.trim());
+  const qBase  = `${title} ${year ?? ""}`.trim();
+  const q      = encodeURIComponent(qBase);
+  const qTrailer = encodeURIComponent(`${qBase} official trailer`);
+
   const links = [
     { label: "JustWatch",    href: `https://www.justwatch.com/us/search?q=${q}` },
     { label: "Letterboxd",   href: `https://letterboxd.com/search/${q}/` },
     { label: "IMDb",         href: `https://www.imdb.com/find?q=${q}` },
   ];
+
   return (
     <div className="rounded-sm bg-[var(--ink-lift)] border border-[var(--taupe)]/25 p-5">
       <div className="flex items-baseline justify-between mb-3">
@@ -25,8 +30,21 @@ export function WhereToWatch({ title, year }: WhereToWatchProps) {
         </p>
         <p className="font-arabic text-xs text-[var(--saffron)]/70">أين تشاهد</p>
       </div>
-      <p className="text-xs text-[var(--cream-muted)] mb-4 leading-relaxed">
-        KHAYAL indexes films — we don't stream them. Find this title on:
+
+      {/* Prominent trailer CTA */}
+      <a
+        href={`https://www.youtube.com/results?search_query=${qTrailer}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group w-full inline-flex items-center gap-3 h-11 px-4 mb-4 rounded-sm bg-[var(--saffron)] text-[var(--ink)] text-sm font-medium hover:bg-[var(--saffron-glow)] transition-colors shadow-[0_0_18px_-6px_var(--saffron)]"
+      >
+        <Play size={14} className="fill-[var(--ink)]" />
+        Watch trailer
+        <ExternalLink size={11} className="ml-auto opacity-70 group-hover:opacity-100" />
+      </a>
+
+      <p className="text-xs text-[var(--cream-muted)] mb-3 leading-relaxed">
+        KHAYAL indexes films — we don't stream. Rentals & credits:
       </p>
       <div className="flex flex-wrap gap-2">
         {links.map((l) => (

@@ -1,8 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="KHAYAL">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="KHAYAL — خيال">
   <rect width="32" height="32" rx="6" fill="#1b1111"/>
-  <!-- abstracted خ: the dot above -->
-  <circle cx="22" cy="9.5" r="2" fill="#F4C430"/>
-  <!-- abstracted خ: the bowl below -->
-  <path d="M6 18 Q 6 23, 12 23 L 20 23 Q 26 23, 26 18"
-        fill="none" stroke="#F4C430" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text
+    x="16" y="16"
+    text-anchor="middle"
+    dominant-baseline="central"
+    fill="#F4C430"
+    font-size="24"
+    font-weight="500"
+    font-family="'Reem Kufi','Noto Sans Arabic','Amiri','Geeza Pro','Arabic Typesetting',serif"
+  >خ</text>
 </svg>

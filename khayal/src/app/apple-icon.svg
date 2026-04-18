@@ -1,10 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="KHAYAL">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="KHAYAL — خيال">
   <rect width="180" height="180" rx="36" fill="#1b1111"/>
-  <!-- abstracted خ: the dot above -->
-  <circle cx="124" cy="54" r="11" fill="#F4C430"/>
-  <!-- abstracted خ: the bowl below -->
-  <path d="M34 102 Q 34 130, 68 130 L 112 130 Q 146 130, 146 102"
-        fill="none" stroke="#F4C430" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- subtle saffron ring for brand tint at scale -->
-  <rect x="4" y="4" width="172" height="172" rx="32" fill="none" stroke="#F4C430" stroke-width="1" opacity="0.15"/>
+  <text
+    x="90" y="90"
+    text-anchor="middle"
+    dominant-baseline="central"
+    fill="#F4C430"
+    font-size="130"
+    font-weight="500"
+    font-family="'Reem Kufi','Noto Sans Arabic','Amiri','Geeza Pro','Arabic Typesetting',serif"
+  >خ</text>
+  <rect x="4" y="4" width="172" height="172" rx="32" fill="none" stroke="#F4C430" stroke-width="1" opacity="0.2"/>
 </svg>

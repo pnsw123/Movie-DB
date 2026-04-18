@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+/* ─── Saffron Marquee palette (locked from Stitch) ───────────────────────── */
+:root {
+  --ink:              #1b1111;
+  --ink-lift:         #281d1d;
+  --ink-high:         #3a2a2a;
+  --cream:            #f2dedd;
+  --cream-muted:      #c8b4b3;
+  --taupe:            #9a907a;
+
+  --saffron:          #f4c430;
+  --saffron-glow:     #ffe3a1;
+  --terracotta:       #ffb4a5;
+  --lamp:             #edec6f;
+
+  --danger:           #ff6b6b;
+}
+
+@theme inline {
+  --color-background: var(--ink);
+  --color-foreground: var(--cream);
+  --color-muted: var(--cream-muted);
+  --color-border: var(--taupe);
+  --color-surface: var(--ink-lift);
+  --color-surface-high: var(--ink-high);
+  --color-primary: var(--saffron);
+  --color-primary-foreground: var(--ink);
+  --color-secondary: var(--terracotta);
+  --color-accent: var(--lamp);
+  --color-danger: var(--danger);
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jbm), ui-monospace, monospace;
+  --font-arabic: var(--font-reem), "Noto Sans Arabic", sans-serif;
+}
+
+html, body {
+  background: var(--ink);
+  color: var(--cream);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-optical-sizing: auto;
+  font-variation-settings: "opsz" 144, "SOFT" 50;
+  letter-spacing: -0.02em;
+}
+
+.font-arabic {
+  font-family: var(--font-reem), "Noto Sans Arabic", sans-serif;
+}
+
+::selection { background: var(--saffron); color: var(--ink); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb { background: var(--ink-high); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--taupe); }
+
+body::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  opacity: 0.065;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.95 0 0 0 0 0.87 0 0 0 0 0.86 0 0 0 0.7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  animation: grainShift 8s steps(8) infinite;
+}
+@keyframes grainShift {
+  0%   { transform: translate(0,0); }
+  10%  { transform: translate(-2%,-1%); }
+  20%  { transform: translate(1%,1%); }
+  30%  { transform: translate(-1%,2%); }
+  40%  { transform: translate(2%,-2%); }
+  50%  { transform: translate(-2%,1%); }
+  60%  { transform: translate(1%,-1%); }
+  70%  { transform: translate(-1%,-2%); }
+  80%  { transform: translate(2%,2%); }
+  90%  { transform: translate(-2%,-1%); }
+  100% { transform: translate(0,0); }
+}

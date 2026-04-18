@@ -1,0 +1,64 @@
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import type { Movie } from "@/lib/supabase";
+import { MovieCard } from "./movie-card";
+import { year } from "@/lib/utils";
+
+export interface ShelfProps {
+  title: string;
+  kicker?: string;      // small Arabic/eyebrow label
+  items: Movie[];
+  /** Optional "view all" URL with filters applied. */
+  viewAllHref?: string;
+  /** Ratings map: movieId -> avg_rating. */
+  ratingByMovie?: Map<number, number>;
+}
+
+/**
+ * Horizontal scrolling shelf of movie cards. A library shelf, not a hero.
+ * Dense, browsable, with a "view all" CTA on the right.
+ */
+export function Shelf({ title, kicker, items, viewAllHref, ratingByMovie }: ShelfProps) {
+  if (items.length === 0) return null;
+  return (
+    <section className="mb-14">
+      <header className="flex items-baseline justify-between gap-4 mb-5">
+        <div className="flex items-baseline gap-3">
+          <h2 className="font-display text-xl md:text-2xl text-[var(--cream)]">
+            {title}
+          </h2>
+          {kicker && (
+            <span className="font-arabic text-sm text-[var(--saffron)]/70">{kicker}</span>
+          )}
+          <span className="font-mono text-[10px] tracking-[0.25em] uppercase text-[var(--cream-muted)] ml-1">
+            {items.length}
+          </span>
+        </div>
+        {viewAllHref && (
+          <Link
+            href={viewAllHref}
+            className="inline-flex items-center gap-1.5 text-[11px] font-mono tracking-[0.2em] uppercase text-[var(--cream-muted)] hover:text-[var(--saffron)] transition-colors"
+          >
+            View all <ArrowRight size={11} />
+          </Link>
+        )}
+      </header>
+
+      <div className="relative -mx-6 px-6 overflow-x-auto scroll-smooth snap-x">
+        <div className="flex gap-4 min-w-max pb-2">
+          {items.map((m) => (
+            <div key={m.id} className="w-[160px] md:w-[180px] shrink-0 snap-start">
+              <MovieCard
+                title={m.title}
+                year={year(m.release_date)}
+                posterUrl={m.poster_url}
+                rating={ratingByMovie?.get(m.id) ?? null}
+                href={`/movies/${m.slug}`}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

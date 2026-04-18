@@ -1,0 +1,252 @@
+import Link from "next/link";
+import { Search, X } from "lucide-react";
+import { supabaseServer } from "@/lib/supabase-server";
+import type { Movie } from "@/lib/supabase";
+import { MovieCard } from "@/components/movie-card";
+import { FilterChips } from "@/components/filter-chips";
+import { Shelf } from "@/components/shelf";
+import { LANGUAGES, RATINGS, hasAnyFilter } from "@/lib/filters";
+import { year } from "@/lib/utils";
+
+export const revalidate = 300;
+
+type Search = { lang?: string; rating?: string };
+
+export default async function BrowsePage({ searchParams }: { searchParams: Promise<Search> }) {
+  const params = await searchParams;
+  const usp = new URLSearchParams(Object.entries(params).filter(([, v]) => !!v) as [string, string][]);
+  const activeLang   = params.lang   ?? "";
+  const activeRating = params.rating ?? "";
+  const filtersActive = hasAnyFilter(usp);
+
+  const sb = await supabaseServer();
+  const today = new Date().toISOString().slice(0, 10);
+  const sixtyDaysAgo = new Date(Date.now() - 60 * 86_400_000).toISOString().slice(0, 10);
+
+  // If a filter is active, skip shelves and render filtered grid only
+  const shelfQueries = filtersActive
+    ? { nowPlaying: null, upcoming: null, classics: null, world: null, recent: null, totals: null }
+    : await loadShelves(sb, today, sixtyDaysAgo);
+
+  // Deep browse grid (filtered or latest)
+  let q = sb
+    .from("movies")
+    .select("id, title, slug, release_date, poster_url, backdrop_url, overview, original_language")
+    .not("poster_url", "is", null)
+    .order("release_date", { ascending: false, nullsFirst: false })
+    .limit(48);
+  if (activeLang)   q = q.eq("original_language", activeLang);
+  if (activeRating) q = q.eq("age_rating", activeRating);
+  const { data: gridData } = await q;
+  const grid = (gridData ?? []) as Movie[];
+
+  // Stats shared across rendered cards
+  const allIds = new Set<number>();
+  (gridData ?? []).forEach((m: any) => allIds.add(m.id));
+  if (shelfQueries.nowPlaying) shelfQueries.nowPlaying.forEach((m: any) => allIds.add(m.id));
+  if (shelfQueries.upcoming)   shelfQueries.upcoming.forEach((m: any)   => allIds.add(m.id));
+  if (shelfQueries.classics)   shelfQueries.classics.forEach((m: any)   => allIds.add(m.id));
+  if (shelfQueries.world)      shelfQueries.world.forEach((m: any)      => allIds.add(m.id));
+  if (shelfQueries.recent)     shelfQueries.recent.forEach((m: any)     => allIds.add(m.id));
+
+  const idList = Array.from(allIds);
+  const { data: stats } = await sb
+    .from("movie_stats")
+    .select("movie_id, avg_rating")
+    .in("movie_id", idList.length ? idList : [-1]);
+  const ratingByMovie = new Map<number, number>();
+  (stats ?? []).forEach((s: any) => { if (s.avg_rating != null) ratingByMovie.set(s.movie_id, Number(s.avg_rating)); });
+
+  const totals = shelfQueries.totals;
+
+  return (
+    <div className="mx-auto max-w-[1600px] px-6 py-10">
+      {/* ─── Index masthead — compact, utilitarian ─── */}
+      <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <p className="flex items-center gap-3 mb-2 text-[11px] font-mono tracking-[0.3em] uppercase text-[var(--saffron)]">
+            <span className="font-arabic text-base tracking-normal">خيال</span>
+            <span className="h-px w-6 bg-[var(--saffron)]/40" />
+            The Cinema Index
+          </p>
+          <h1 className="font-display text-3xl md:text-4xl text-[var(--cream)]">
+            What are you looking for?
+          </h1>
+        </div>
+
+        <Link
+          href="/search"
+          className="flex items-center gap-3 h-12 pl-4 pr-5 rounded-sm bg-[var(--ink-lift)] border border-[var(--taupe)]/25 text-[var(--cream-muted)] hover:text-[var(--cream)] hover:border-[var(--saffron)]/50 transition-colors w-full md:w-[420px]"
+        >
+          <Search size={16} className="text-[var(--saffron)]" />
+          <span className="flex-1 text-sm text-left">Search 3,000+ films & series…</span>
+          <kbd className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--ink)] border border-[var(--taupe)]/25">⌘K</kbd>
+        </Link>
+      </div>
+
+      {/* ─── Stats strip ─── */}
+      {totals && (
+        <div className="mb-12 flex flex-wrap items-center gap-x-8 gap-y-2 font-mono text-[11px] tracking-[0.2em] uppercase text-[var(--cream-muted)] border-y border-[var(--taupe)]/15 py-3">
+          <span><strong className="text-[var(--saffron)] font-display text-lg normal-case tracking-normal">{totals.movies.toLocaleString()}</strong> films</span>
+          <span><strong className="text-[var(--saffron)] font-display text-lg normal-case tracking-normal">{totals.tv.toLocaleString()}</strong> series</span>
+          <span><strong className="text-[var(--saffron)] font-display text-lg normal-case tracking-normal">{totals.upcoming}</strong> upcoming</span>
+          <span><strong className="text-[var(--saffron)] font-display text-lg normal-case tracking-normal">{totals.classics}</strong> pre-2000</span>
+          <span className="ml-auto text-[var(--cream-muted)]/60">ordered by release · newest first</span>
+        </div>
+      )}
+
+      {/* ─── Shelves (hidden when filter is active) ─── */}
+      {!filtersActive && shelfQueries.nowPlaying && (
+        <>
+          <Shelf
+            title="Now Playing"
+            kicker="الأفلام الجارية"
+            items={shelfQueries.nowPlaying}
+            ratingByMovie={ratingByMovie}
+          />
+          <Shelf
+            title="On the Horizon"
+            kicker="قريبًا"
+            items={shelfQueries.upcoming!}
+            ratingByMovie={ratingByMovie}
+          />
+          <Shelf
+            title="World Cinema"
+            kicker="سينما العالم"
+            items={shelfQueries.world!}
+            ratingByMovie={ratingByMovie}
+          />
+          <Shelf
+            title="The Classics"
+            kicker="الكلاسيكيات"
+            items={shelfQueries.classics!}
+            ratingByMovie={ratingByMovie}
+          />
+          <Shelf
+            title="Recent Additions"
+            kicker="أحدث المدخلات"
+            items={shelfQueries.recent!}
+            ratingByMovie={ratingByMovie}
+          />
+        </>
+      )}
+
+      {/* ─── Deep browse with filters ─── */}
+      <section className="mt-4">
+        <div className="flex items-baseline justify-between mb-5">
+          <h2 className="font-display text-xl md:text-2xl text-[var(--cream)]">
+            {filtersActive ? "Filtered results" : "Browse the full archive"}
+          </h2>
+          <span className="font-mono text-[11px] tracking-[0.2em] uppercase text-[var(--cream-muted)]">
+            {grid.length} shown
+          </span>
+        </div>
+
+        {/* Filter rail */}
+        <div className="space-y-3 mb-8 pb-5 border-b border-[var(--taupe)]/15">
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className="shrink-0 font-mono text-[10px] tracking-[0.25em] uppercase text-[var(--cream-muted)] w-16">Lang</span>
+            <FilterChips items={LANGUAGES} activeCode={activeLang} paramKey="lang" searchParams={usp} />
+          </div>
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className="shrink-0 font-mono text-[10px] tracking-[0.25em] uppercase text-[var(--cream-muted)] w-16">Rating</span>
+            <FilterChips items={RATINGS} activeCode={activeRating} paramKey="rating" searchParams={usp} />
+          </div>
+          {filtersActive && (
+            <Link
+              href="/browse"
+              className="inline-flex items-center gap-1.5 text-[11px] font-mono tracking-wider uppercase text-[var(--cream-muted)] hover:text-[var(--saffron)] transition-colors mt-1"
+            >
+              <X size={12} /> Clear filters
+            </Link>
+          )}
+        </div>
+
+        {grid.length === 0 ? (
+          <div className="py-16 text-center">
+            <p className="font-arabic text-3xl text-[var(--saffron)]/70 mb-3">لا خيال هنا</p>
+            <p className="font-display italic text-xl text-[var(--cream)]">Nothing matches.</p>
+            <p className="mt-2 text-sm text-[var(--cream-muted)]">Try loosening a filter.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-5 gap-y-10">
+            {grid.map((m) => (
+              <MovieCard
+                key={m.id}
+                title={m.title}
+                year={year(m.release_date)}
+                posterUrl={m.poster_url}
+                rating={ratingByMovie.get(m.id) ?? null}
+                href={`/movies/${m.slug}`}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+// ─── Data loader for the shelves ─────────────────────────────────────────
+
+async function loadShelves(sb: any, today: string, sixtyDaysAgo: string) {
+  const [
+    { data: nowPlaying },
+    { data: upcoming },
+    { data: classics },
+    { data: world },
+    { data: recent },
+    { count: movieTotal },
+    { count: tvTotal },
+    { count: upcomingCount },
+    { count: classicsCount },
+  ] = await Promise.all([
+    sb.from("movies")
+      .select("id, title, slug, release_date, poster_url, backdrop_url, overview, original_language")
+      .not("poster_url", "is", null)
+      .gte("release_date", sixtyDaysAgo)
+      .lte("release_date", today)
+      .order("release_date", { ascending: false })
+      .limit(15),
+    sb.from("movies")
+      .select("id, title, slug, release_date, poster_url, backdrop_url, overview, original_language")
+      .not("poster_url", "is", null)
+      .gt("release_date", today)
+      .order("release_date", { ascending: true })
+      .limit(15),
+    sb.from("movies")
+      .select("id, title, slug, release_date, poster_url, backdrop_url, overview, original_language")
+      .not("poster_url", "is", null)
+      .lt("release_date", "2000-01-01")
+      .order("release_date", { ascending: false })
+      .limit(15),
+    sb.from("movies")
+      .select("id, title, slug, release_date, poster_url, backdrop_url, overview, original_language")
+      .not("poster_url", "is", null)
+      .neq("original_language", "en")
+      .order("release_date", { ascending: false })
+      .limit(15),
+    sb.from("movies")
+      .select("id, title, slug, release_date, poster_url, backdrop_url, overview, original_language")
+      .not("poster_url", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(15),
+    sb.from("movies").select("*", { count: "exact", head: true }).not("poster_url", "is", null),
+    sb.from("tv_series").select("*", { count: "exact", head: true }).not("poster_url", "is", null),
+    sb.from("movies").select("*", { count: "exact", head: true }).not("poster_url", "is", null).gt("release_date", today),
+    sb.from("movies").select("*", { count: "exact", head: true }).not("poster_url", "is", null).lt("release_date", "2000-01-01"),
+  ]);
+  return {
+    nowPlaying: nowPlaying as Movie[],
+    upcoming:   upcoming as Movie[],
+    classics:   classics as Movie[],
+    world:      world as Movie[],
+    recent:     recent as Movie[],
+    totals: {
+      movies: movieTotal ?? 0,
+      tv: tvTotal ?? 0,
+      upcoming: upcomingCount ?? 0,
+      classics: classicsCount ?? 0,
+    },
+  };
+}

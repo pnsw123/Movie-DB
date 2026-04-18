@@ -57,7 +57,11 @@ The database schema is finalized and deployed. This PRD covers everything needed
 2. **Fetch details** — Call `GET /movie/{id}?append_to_response=release_dates` for each ID (1 call per movie)
 3. **Transform** — Generate slug, map status enum, build full image URLs
 4. **Insert** — POST to Supabase PostgREST `/movies` and `/tv_series` using the service role key
-5. **Target volume** — 200 movies + 50 TV series is enough for a demo
+5. **Target volume** — seed as much as TMDB will give us, in tiers:
+   - **Tier 1 (bootstrap, ~1 hr):** ~2,000 movies + ~500 TV series — enough to make search, filters, and pagination feel real
+   - **Tier 2 (full catalog, overnight run):** ~10,000 movies + ~2,000 TV series — popular + top-rated + trending, spanning multiple decades
+   - **Upper bound:** TMDB has ~900k movies; we're not chasing that. Stop when the DB feels full and diverse, not when a counter hits a number.
+   - No hardcoded cap in the seed script — parameterize it (`--movies=N --tv=N`) so we can re-run for more
 
 ### Useful Python Libraries for the Seed Script
 
@@ -87,22 +91,29 @@ If we want a faster no-API-key bootstrap, these CSV datasets work for movies (TV
 
 Both search modes are available to everyone — anonymous and logged-in users alike.
 
-#### Tab 1: Normal Search (powered by Typesense)
+#### Tab 1: Normal Search
 
 | Feature | Description |
 |---|---|
-| Search bar | User types a movie/TV title — typo-tolerant, instant results |
-| Filter panel | Filter by language, year range, age rating |
+| Search bar | User types a movie/TV title — results ranked by relevance |
+| Filter panel | Filter by language, year range, age rating (movies); status (TV) |
 | Pagination | 12 results per page |
-| Engine | **Typesense** — synced from Supabase, much better than basic `LIKE` queries |
+| Engine — Phase 1 (live now) | **Native PostgreSQL FTS** via `search_movies` / `search_tv_series` / `search_all` RPCs — uses existing GIN `tsvector` indexes, `plainto_tsquery`, `ts_rank` |
+| Engine — Phase 2 (planned) | **Typesense** — replaces/augments Phase 1 with typo tolerance and faceted filters |
 
-**Why Typesense over plain Supabase full-text:**
+**Phase 1 — Native FTS (already deployed):**
+- Three RPCs: `search_movies`, `search_tv_series`, `search_all`
+- GIN indexes (`idx_movies_search`, `idx_tv_series_search`) already in schema
+- Supports language filter, year range, age rating, status filter, pagination
+- No external service — runs entirely inside Supabase
+- Granted to `anon + authenticated` — search is public
+
+**Phase 2 — Typesense (target for production):**
 - Typo tolerance (user types "Inceptoin" → finds "Inception")
-- Faceted filters built in
-- Sub-10ms response time
+- Faceted filters built in, sub-10ms response time
 - [typesense/typesense](https://github.com/typesense/typesense) — 25k stars
-
-**Sync strategy:** One script pushes all movies + TV series from Supabase into a Typesense index on seed. A Supabase trigger or webhook keeps it in sync on new inserts.
+- Sync strategy: one script pushes all movies + TV series into a Typesense index after seed; a Supabase trigger or webhook keeps it in sync on new inserts
+- Phase 1 RPCs remain as fallback if Typesense is unavailable
 
 #### Tab 2: SQL Search (powered by `run_query` RPC)
 
@@ -238,8 +249,9 @@ All tables have RLS enabled. Admins can manage content. Users manage only their 
 | Database | PostgreSQL via Supabase |
 | Auth | Supabase Auth |
 | API | Supabase PostgREST (auto-generated from schema) |
-| Search — Normal | **Typesense** ([typesense/typesense](https://github.com/typesense/typesense), 25k stars) |
-| Search — SQL | `run_query` PL/pgSQL RPC — SELECT-only sandbox |
+| Search — Normal (Phase 1) | PostgreSQL native FTS — `search_movies` / `search_tv_series` / `search_all` RPCs, GIN indexes, `plainto_tsquery` ✅ Live |
+| Search — Normal (Phase 2) | **Typesense** ([typesense/typesense](https://github.com/typesense/typesense), 25k stars) — typo tolerance + faceted filters |
+| Search — SQL | `run_query` PL/pgSQL RPC — SELECT-only sandbox ✅ Live |
 | Seed Script | Python + `tmdbv3api` + `supabase-py` + Typesense sync |
 | Reference App | [tarikulpapon/cs436-636-movie-app](https://github.com/tarikulpapon/cs436-636-movie-app) |
 | Frontend | TBD (not in scope for this PRD) |
@@ -267,18 +279,21 @@ There is **no custom backend to write.** Supabase IS the backend:
 - The `run_query` RPC is the only custom function — already written
 - RLS policies enforce all security rules
 
-The only decision: whether to use Typesense (separate server) or Supabase's native full-text search (already in place via GIN index). For a class project, native full-text is likely sufficient — Typesense adds real infra complexity.
+**Search strategy:** Native FTS RPCs are live now (Phase 1 — no external server needed). Typesense is Phase 2 — adds typo tolerance and instant faceted filters once the index sync is wired up.
 
 ### What's Actually Left
 
 | Category | Task | Effort | Status |
 |---|---|---|---|
-| **Migration** | Apply `20260417000000` to Supabase | 5 min — run `supabase db push` | ⚠️ Written, not applied |
-| **Data** | Get a TMDB API key | 5 min — free registration | 🔲 Todo |
-| **Data** | Write TMDB seed script | ~2–3 hrs | 🔲 Todo |
-| **Data** | Run seed: 200 movies + 50 TV series | ~30 min to run | 🔲 Todo |
-| **Search** | Decide: Typesense vs native full-text | 15 min decision | 🔲 Decision needed |
-| **Search** | If Typesense: set up instance + sync | ~3–4 hrs | 🔲 Optional |
+| **Migration** | `20260417000000` — saved_queries + run_query RPC | Applied ✅ | ✅ Done |
+| **Migration** | `20260417010000` — native FTS RPCs (search_movies / search_tv_series / search_all) | Applied ✅ | ✅ Done |
+| **Migration** | `20260417020000` — stats views + detail RPCs (`get_movie_detail`, `get_tv_detail`) + `generate_recommendations` | Applied ✅ | ✅ Done |
+| **Data** | TMDB API key added to `.env` | 5 min | ✅ Done |
+| **Data** | TMDB seed script (`scripts/seed_tmdb.py`) | Written ✅ | ✅ Done |
+| **Data** | Run seed — Tier 1 (~2k movies + ~500 TV) | ~12 min | ✅ Done |
+| **Data** | Run seed — expansion (+1.4k movies + 500 TV) | ~12 min | ✅ Done — **total: 3,439 movies + 1,002 TV** |
+| **Data** | Run seed — Tier 2 (~10k movies + ~2k TV, overnight) | Optional | 🔲 Stretch |
+| **Search Phase 2** | Set up Typesense instance + sync script | ~3–4 hrs | 🔲 Planned |
 | **UI** | All frontend pages (8 routes) | The bulk of remaining work | 🔲 Todo |
 | **UI** | Design mockups (Nano Banana) | Per component, as needed | 🔲 In progress |
 | **UI** | Component search (21st.dev) | Per component, as needed | 🔲 In progress |
@@ -302,10 +317,10 @@ The only decision: whether to use Typesense (separate server) or Supabase's nati
 | # | Milestone | Status |
 |---|---|---|
 | 1 | Database schema finalized + deployed | ✅ Done |
-| 2 | Migration `20260417000000` written | ✅ Written |
-| 2b | Apply migration to Supabase | ⚠️ Pending |
+| 2 | Migration `20260417000000` — saved_queries + run_query RPC | ✅ Done |
+| 2b | Migration `20260417010000` — native FTS search RPCs | ✅ Done |
 | 3 | TMDB seed script written + run | 🔲 Todo |
-| 4 | Search decision (Typesense vs native) | 🔲 Decision |
+| 4 | Search Phase 2 — Typesense instance + sync | 🔲 Planned |
 | 5 | UI — Home + Browse pages | 🔲 Todo |
 | 6 | UI — Movie + TV detail pages | 🔲 Todo |
 | 7 | UI — Auth (login/signup) | 🔲 Todo |
@@ -338,7 +353,7 @@ The only decision: whether to use Typesense (separate server) or Supabase's nati
 ┌─────────────────────────────────────────────────────┐
 │  [ Normal Search ]  [ SQL Search ]                  │
 ├─────────────────────────────────────────────────────┤
-│  Tab 1: Typesense-powered search bar + filter panel │
+│  Tab 1: Search bar + filter panel (native FTS → Typesense) │
 │  Tab 2: SQL textarea + sidebar of default queries   │
 └─────────────────────────────────────────────────────┘
 ```

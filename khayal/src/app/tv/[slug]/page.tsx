@@ -1,17 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Star, CalendarDays, ArrowLeft, Film, Radio } from "lucide-react";
+import { CalendarDays, ArrowLeft, Film, Radio, Globe } from "lucide-react";
 import { supabaseServer } from "@/lib/supabase-server";
 import type { TvDetail } from "@/lib/supabase";
+import { currentUser } from "@/lib/auth";
 import { year } from "@/lib/utils";
+import { RateWidget } from "@/components/rate-widget";
+import { ReviewForm } from "@/components/review-form";
+import { ScoreBadge } from "@/components/score-badge";
+import { WhereToWatch } from "@/components/where-to-watch";
+import { AddToListButton } from "@/components/add-to-list";
+import { loadUserListsForTarget } from "@/lib/lists";
 
-export const revalidate = 120;
+export const revalidate = 0;
 
-const STATUS_COPY: Record<string, string> = {
-  ongoing: "Still running",
-  ended: "Ended",
-  cancelled: "Cancelled",
-  planned: "Planned",
+const STATUS_COPY: Record<string, { label: string; dot: string }> = {
+  ongoing:   { label: "Currently running",   dot: "#4ade80" },
+  ended:     { label: "Ended",                dot: "var(--cream-muted)" },
+  cancelled: { label: "Cancelled",            dot: "var(--terracotta)" },
+  planned:   { label: "Planned",              dot: "var(--saffron)" },
 };
 
 export default async function TvDetailPage({
@@ -20,33 +27,49 @@ export default async function TvDetailPage({
   const { slug } = await params;
   const sb = await supabaseServer();
   const { data, error } = await sb.rpc("get_tv_detail", { p_slug: slug });
-
   if (error) throw new Error(error.message);
   if (!data) notFound();
 
   const d = data as TvDetail;
   const { tv_series: t, stats, reviews } = d;
 
+  const user = await currentUser();
+  let myRating: number | null = null;
+  let myReview: { id: number; headline: string | null; body: string; contains_spoiler: boolean } | null = null;
+  let myLists: any[] = [];
+  if (user) {
+    const [{ data: r }, { data: rv }, lists] = await Promise.all([
+      sb.from("tv_series_ratings").select("rating").eq("tv_series_id", t.id).eq("user_id", user.id).maybeSingle(),
+      sb.from("tv_series_reviews").select("id, headline, body, contains_spoiler").eq("tv_series_id", t.id).eq("user_id", user.id).maybeSingle(),
+      loadUserListsForTarget(user.id, "tv_series", t.id),
+    ]);
+    myRating = r?.rating ?? null;
+    myReview = rv ?? null;
+    myLists = lists;
+  }
+
+  const avg = stats?.avg_rating ? Number(stats.avg_rating) : null;
+  const status = STATUS_COPY[t.status ?? ""] ?? { label: t.status ?? "—", dot: "var(--cream-muted)" };
+
   return (
     <div className="relative">
       {t.backdrop_url && (
-        <div className="absolute inset-x-0 top-0 h-[70vh] overflow-hidden" aria-hidden>
-          <img src={t.backdrop_url} alt="" className="w-full h-full object-cover object-[50%_25%] opacity-35" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[var(--ink)]/30 via-[var(--ink)]/75 to-[var(--ink)]" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[var(--ink)]/60 via-transparent to-[var(--ink)]/60" />
+        <div className="absolute inset-x-0 top-0 h-[60vh] overflow-hidden" aria-hidden>
+          <img src={t.backdrop_url} alt="" className="w-full h-full object-cover object-[50%_25%] opacity-25" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[var(--ink)]/50 via-[var(--ink)]/85 to-[var(--ink)]" />
         </div>
       )}
 
-      <div className="relative mx-auto max-w-[1400px] px-6 pt-12 pb-24">
+      <div className="relative mx-auto max-w-[1400px] px-6 pt-8 pb-24">
         <Link
           href="/browse"
-          className="inline-flex items-center gap-2 text-[11px] font-mono tracking-[0.25em] uppercase text-[var(--cream-muted)] hover:text-[var(--saffron)] transition-colors mb-10"
+          className="inline-flex items-center gap-2 text-[11px] font-mono tracking-[0.25em] uppercase text-[var(--cream-muted)] hover:text-[var(--saffron)] transition-colors mb-8"
         >
           <ArrowLeft size={12} /> The Archive
         </Link>
 
-        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] lg:grid-cols-[320px_1fr] gap-10 lg:gap-14 mb-20">
-          <div className="aspect-[2/3] rounded-[2px] overflow-hidden border border-[var(--saffron)]/20 shadow-[0_20px_60px_-30px_rgb(0_0_0/0.9)]">
+        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] lg:grid-cols-[300px_1fr] gap-8 lg:gap-12 mb-14">
+          <div className="aspect-[2/3] rounded-[2px] overflow-hidden border border-[var(--saffron)]/15 shadow-[0_20px_60px_-30px_rgb(0_0_0/0.9)] self-start">
             {t.poster_url ? (
               <img src={t.poster_url} alt={t.title} className="w-full h-full object-cover" />
             ) : (
@@ -56,60 +79,105 @@ export default async function TvDetailPage({
             )}
           </div>
 
-          <div>
-            <p className="font-mono text-[11px] tracking-[0.3em] uppercase text-[var(--saffron)] mb-4">
+          <div className="min-w-0">
+            <p className="font-mono text-[11px] tracking-[0.3em] uppercase text-[var(--saffron)] mb-3">
               Series · مسلسل
             </p>
-            <h1 className="font-display text-[clamp(2.5rem,5vw,4.5rem)] leading-[0.95] text-[var(--cream)] mb-6">
+            <h1 className="font-display text-[clamp(2.25rem,4.5vw,4rem)] leading-[0.95] text-[var(--cream)] mb-4">
               {t.title}
             </h1>
 
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mb-8 text-sm">
-              {stats?.avg_rating && (
-                <div className="flex items-center gap-2">
-                  <Star size={16} className="fill-[var(--saffron)] text-[var(--saffron)]" />
-                  <span className="font-display text-2xl text-[var(--saffron)]">{Number(stats.avg_rating).toFixed(1)}</span>
-                  <span className="text-[var(--cream-muted)] text-xs">
-                    ({stats.total_ratings} rating{stats.total_ratings === 1 ? "" : "s"})
-                  </span>
-                </div>
-              )}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-6 text-sm text-[var(--cream-muted)]">
               {t.first_air_date && (
-                <span className="flex items-center gap-2 text-[var(--cream-muted)]">
-                  <CalendarDays size={14} /> {year(t.first_air_date)}
+                <span className="flex items-center gap-1.5">
+                  <CalendarDays size={13} /> {year(t.first_air_date)}
                   {t.last_air_date && t.last_air_date !== t.first_air_date ? `–${year(t.last_air_date)}` : ""}
                 </span>
               )}
               {t.status && (
-                <span className="flex items-center gap-2 text-[var(--cream-muted)]">
-                  <Radio size={14} /> {STATUS_COPY[t.status] || t.status}
+                <span className="inline-flex items-center gap-2 h-7 pl-2 pr-3 rounded-sm bg-[var(--ink-lift)] border border-[var(--taupe)]/25 text-[10px] font-mono tracking-[0.22em] uppercase">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: status.dot }} />
+                  <span className="text-[var(--cream)]">{status.label}</span>
                 </span>
               )}
             </div>
 
+            <div className="mb-8">
+              <ScoreBadge avg={avg} totalRatings={stats?.total_ratings ?? 0} totalReviews={stats?.total_reviews ?? 0} />
+            </div>
+
             {t.overview && (
-              <p className="max-w-2xl text-base leading-relaxed text-[var(--cream)]/90 mb-10">
+              <p className="max-w-2xl text-[15px] leading-relaxed text-[var(--cream)]/90 mb-8">
                 {t.overview}
               </p>
             )}
+
+            <div className="pt-6 border-t border-[var(--taupe)]/15 space-y-5">
+              <RateWidget
+                userId={user?.id ?? null}
+                kind="tv_series"
+                targetId={t.id}
+                initialRating={myRating}
+                slug={t.slug}
+              />
+              <div>
+                <AddToListButton
+                  userId={user?.id ?? null}
+                  kind="tv_series"
+                  targetId={t.id}
+                  slug={t.slug}
+                  initialLists={myLists}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        <section className="pt-12 border-t border-[var(--taupe)]/15">
+        <div className="grid md:grid-cols-[320px_1fr] gap-6 mb-14">
+          <WhereToWatch title={t.title} year={year(t.first_air_date)} />
+          <ReviewForm
+            userId={user?.id ?? null}
+            kind="tv_series"
+            targetId={t.id}
+            slug={t.slug}
+            existing={myReview}
+          />
+        </div>
+
+        <section className="pt-10 border-t border-[var(--taupe)]/15">
           <h2 className="font-display text-2xl text-[var(--cream)] mb-8">
             Reviews <span className="font-mono text-sm text-[var(--cream-muted)] ml-2">({reviews.length})</span>
           </h2>
+
           {reviews.length === 0 ? (
-            <p className="py-12 text-center font-display italic text-xl text-[var(--cream)]/70">
-              No voices yet. Be the first.
-            </p>
+            <div className="py-12 text-center">
+              <p className="font-display italic text-xl text-[var(--cream)]/70">No voices yet.</p>
+              <p className="mt-2 text-sm text-[var(--cream-muted)]">Be the first — form above.</p>
+            </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-5">
               {reviews.map((r) => (
-                <article key={r.id} className="p-5 rounded-sm bg-[var(--ink-lift)] border border-[var(--taupe)]/15">
-                  <p className="text-sm text-[var(--cream)] mb-1">{r.display_name || r.username || "anon"}</p>
+                <article key={r.id} className="p-5 rounded-sm bg-[var(--ink-lift)] border border-[var(--taupe)]/15 hover:border-[var(--saffron)]/40 transition-colors">
+                  <header className="flex items-center gap-3 mb-3">
+                    <div className="h-8 w-8 rounded-full bg-[var(--saffron)] text-[var(--ink)] grid place-items-center font-display text-sm">
+                      {(r.display_name || r.username || "?").charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm text-[var(--cream)]">{r.display_name || r.username || "anon"}</p>
+                      <p className="font-mono text-[10px] tracking-wider text-[var(--cream-muted)]">
+                        {new Date(r.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </header>
                   {r.headline && <h3 className="font-display text-lg text-[var(--cream)] mb-2">{r.headline}</h3>}
-                  <p className="text-sm leading-relaxed text-[var(--cream)]/85 line-clamp-6">{r.body}</p>
+                  {r.contains_spoiler ? (
+                    <details className="text-sm text-[var(--cream-muted)]">
+                      <summary className="cursor-pointer text-[var(--saffron)] hover:text-[var(--saffron-glow)]">Spoilers — click to reveal</summary>
+                      <p className="mt-2 whitespace-pre-wrap">{r.body}</p>
+                    </details>
+                  ) : (
+                    <p className="text-sm leading-relaxed text-[var(--cream)]/85 whitespace-pre-wrap line-clamp-6">{r.body}</p>
+                  )}
                 </article>
               ))}
             </div>

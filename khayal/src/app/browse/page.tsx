@@ -10,13 +10,16 @@ import { year } from "@/lib/utils";
 
 export const revalidate = 300;
 
-type Search = { lang?: string; rating?: string };
+type Search = { lang?: string; rating?: string; page?: string };
+
+const PAGE_SIZE = 48;
 
 export default async function BrowsePage({ searchParams }: { searchParams: Promise<Search> }) {
   const params = await searchParams;
   const usp = new URLSearchParams(Object.entries(params).filter(([, v]) => !!v) as [string, string][]);
   const activeLang   = params.lang   ?? "";
   const activeRating = params.rating ?? "";
+  const page         = Math.max(1, Number(params.page ?? "1") || 1);
   const filtersActive = hasAnyFilter(usp);
 
   const sb = await supabaseServer();
@@ -28,17 +31,20 @@ export default async function BrowsePage({ searchParams }: { searchParams: Promi
     ? { nowPlaying: null, upcoming: null, classics: null, world: null, recent: null, totals: null }
     : await loadShelves(sb, today, sixtyDaysAgo);
 
-  // Deep browse grid (filtered or latest)
+  // Deep browse grid (filtered or latest, paginated)
+  const from = (page - 1) * PAGE_SIZE;
+  const to   = from + PAGE_SIZE - 1;
   let q = sb
     .from("movies")
-    .select("id, title, slug, release_date, poster_url, backdrop_url, overview, original_language")
+    .select("id, title, slug, release_date, poster_url, backdrop_url, overview, original_language", { count: "exact" })
     .not("poster_url", "is", null)
     .order("release_date", { ascending: false, nullsFirst: false })
-    .limit(48);
+    .range(from, to);
   if (activeLang)   q = q.eq("original_language", activeLang);
   if (activeRating) q = q.eq("age_rating", activeRating);
-  const { data: gridData } = await q;
+  const { data: gridData, count: gridTotal } = await q;
   const grid = (gridData ?? []) as Movie[];
+  const totalPages = Math.max(1, Math.ceil((gridTotal ?? 0) / PAGE_SIZE));
 
   // Stats shared across rendered cards
   const allIds = new Set<number>();
@@ -169,21 +175,95 @@ export default async function BrowsePage({ searchParams }: { searchParams: Promi
             <p className="mt-2 text-sm text-[var(--cream-muted)]">Try loosening a filter.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-5 gap-y-10">
-            {grid.map((m) => (
-              <MovieCard
-                key={m.id}
-                title={m.title}
-                year={year(m.release_date)}
-                posterUrl={m.poster_url}
-                rating={ratingByMovie.get(m.id) ?? null}
-                href={`/movies/${m.slug}`}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-5 gap-y-10">
+              {grid.map((m) => (
+                <MovieCard
+                  key={m.id}
+                  title={m.title}
+                  year={year(m.release_date)}
+                  posterUrl={m.poster_url}
+                  rating={ratingByMovie.get(m.id) ?? null}
+                  href={`/movies/${m.slug}`}
+                />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Pagination current={page} total={totalPages} searchParams={usp} totalRows={gridTotal ?? 0} />
+            )}
+          </>
         )}
       </section>
     </div>
+  );
+}
+
+// ─── Pagination ───────────────────────────────────────────────────────────
+
+function Pagination({
+  current, total, searchParams, totalRows,
+}: { current: number; total: number; searchParams: URLSearchParams; totalRows: number }) {
+  const href = (p: number) => {
+    const next = new URLSearchParams(searchParams);
+    if (p === 1) next.delete("page"); else next.set("page", String(p));
+    const q = next.toString();
+    return q ? `/browse?${q}` : "/browse";
+  };
+
+  // Compact range — first, last, current ± 1
+  const pages: (number | "…")[] = [];
+  const seen = new Set<number>();
+  const add = (n: number) => { if (n >= 1 && n <= total && !seen.has(n)) { pages.push(n); seen.add(n); } };
+  add(1); add(2);
+  add(current - 1); add(current); add(current + 1);
+  add(total - 1); add(total);
+  pages.sort((a, b) => (a as number) - (b as number));
+  const withGaps: (number | "…")[] = [];
+  let prev = 0;
+  for (const p of pages) {
+    if (typeof p === "number") {
+      if (prev && p - prev > 1) withGaps.push("…");
+      withGaps.push(p);
+      prev = p;
+    }
+  }
+
+  return (
+    <nav className="mt-14 flex items-center justify-between gap-4 pt-8 border-t border-[var(--taupe)]/15">
+      <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-[var(--cream-muted)]">
+        Page {current} of {total} · {totalRows.toLocaleString()} titles
+      </p>
+      <div className="flex items-center gap-1">
+        {current > 1 && (
+          <Link href={href(current - 1)} className="h-9 px-3 rounded-sm text-xs font-mono tracking-wider uppercase border border-[var(--taupe)]/25 text-[var(--cream-muted)] hover:text-[var(--cream)] hover:border-[var(--saffron)]/50 transition-colors flex items-center">
+            ← Prev
+          </Link>
+        )}
+        {withGaps.map((p, i) => p === "…" ? (
+          <span key={`g${i}`} className="px-2 text-[var(--cream-muted)] text-sm">…</span>
+        ) : (
+          <Link
+            key={p}
+            href={href(p)}
+            className={
+              "h-9 min-w-9 px-3 rounded-sm text-xs font-mono flex items-center justify-center transition-colors " +
+              (p === current
+                ? "bg-[var(--saffron)] text-[var(--ink)]"
+                : "border border-[var(--taupe)]/25 text-[var(--cream-muted)] hover:text-[var(--cream)] hover:border-[var(--saffron)]/50")
+            }
+          >
+            {p}
+          </Link>
+        ))}
+        {current < total && (
+          <Link href={href(current + 1)} className="h-9 px-3 rounded-sm text-xs font-mono tracking-wider uppercase border border-[var(--taupe)]/25 text-[var(--cream-muted)] hover:text-[var(--cream)] hover:border-[var(--saffron)]/50 transition-colors flex items-center">
+            Next →
+          </Link>
+        )}
+      </div>
+    </nav>
   );
 }
 

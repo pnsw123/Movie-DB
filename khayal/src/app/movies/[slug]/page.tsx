@@ -9,6 +9,8 @@ import { RateWidget } from "@/components/rate-widget";
 import { ReviewForm } from "@/components/review-form";
 import { ScoreBadge, StatusBadge } from "@/components/score-badge";
 import { WhereToWatch } from "@/components/where-to-watch";
+import { AddToListButton } from "@/components/add-to-list";
+import { loadUserListsForTarget } from "@/lib/lists";
 
 export const revalidate = 0;
 
@@ -28,13 +30,16 @@ export default async function MovieDetailPage({
   const user = await currentUser();
   let myRating: number | null = null;
   let myReview: { id: number; headline: string | null; body: string; contains_spoiler: boolean } | null = null;
+  let myLists: any[] = [];
   if (user) {
-    const [{ data: r }, { data: rv }] = await Promise.all([
+    const [{ data: r }, { data: rv }, lists] = await Promise.all([
       sb.from("movie_ratings").select("rating").eq("movie_id", movie.id).eq("user_id", user.id).maybeSingle(),
       sb.from("movie_reviews").select("id, headline, body, contains_spoiler").eq("movie_id", movie.id).eq("user_id", user.id).maybeSingle(),
+      loadUserListsForTarget(user.id, "movie", movie.id),
     ]);
     myRating = r?.rating ?? null;
     myReview = rv ?? null;
+    myLists = lists;
   }
 
   const avgRating = stats?.avg_rating ? Number(stats.avg_rating) : null;
@@ -115,8 +120,8 @@ export default async function MovieDetailPage({
               </p>
             )}
 
-            {/* Rate widget */}
-            <div className="pt-6 border-t border-[var(--taupe)]/15">
+            {/* Actions: rate + add to list */}
+            <div className="pt-6 border-t border-[var(--taupe)]/15 space-y-5">
               <RateWidget
                 userId={user?.id ?? null}
                 kind="movie"
@@ -124,6 +129,15 @@ export default async function MovieDetailPage({
                 initialRating={myRating}
                 slug={movie.slug}
               />
+              <div>
+                <AddToListButton
+                  userId={user?.id ?? null}
+                  kind="movie"
+                  targetId={movie.id}
+                  slug={movie.slug}
+                  initialLists={myLists}
+                />
+              </div>
             </div>
           </div>
         </div>

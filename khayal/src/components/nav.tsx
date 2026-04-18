@@ -29,7 +29,7 @@ export async function Nav() {
       .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 bg-[var(--ink)]/85 backdrop-blur-md border-b border-[var(--taupe)]/15">
+    <header className="relative z-20 border-b border-[var(--taupe)]/15">
       <div className="mx-auto max-w-[1600px] px-6 h-16 flex items-center justify-between gap-6">
         <Link href="/browse" className="group flex items-baseline gap-3">
           <span className="font-arabic text-2xl leading-none text-[var(--saffron)] group-hover:text-[var(--saffron-glow)] transition-colors">

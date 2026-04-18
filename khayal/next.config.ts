@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Standalone output bundles a minimal Node server into .next/standalone
+  // which is what Fly's Dockerfile runs. Cuts image size ~90%.
+  output: "standalone",
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "image.tmdb.org" },
+    ],
+  },
 };
 
 export default nextConfig;

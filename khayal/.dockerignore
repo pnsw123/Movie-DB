@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.env*.local
+.env
+npm-debug.log
+yarn-error.log
+.DS_Store
+.vscode
+.idea
+*.log
+out
+build
+dist
+README.md
+CLAUDE.md
+AGENTS.md

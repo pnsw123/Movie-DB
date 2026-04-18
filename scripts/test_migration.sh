@@ -30,10 +30,10 @@ check() {
   local condition="$2"
   if eval "$condition"; then
     echo "  ✅  $label"
-    ((PASS++))
+    PASS=$((PASS+1))
   else
     echo "  ❌  $label"
-    ((FAIL++))
+    FAIL=$((FAIL+1))
   fi
 }
 

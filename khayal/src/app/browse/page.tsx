@@ -26,10 +26,11 @@ export default async function BrowsePage({ searchParams }: { searchParams: Promi
   const today = new Date().toISOString().slice(0, 10);
   const sixtyDaysAgo = new Date(Date.now() - 60 * 86_400_000).toISOString().slice(0, 10);
 
-  // If a filter is active, skip shelves and render filtered grid only
-  const shelfQueries = filtersActive
-    ? { nowPlaying: null, upcoming: null, classics: null, world: null, recent: null, totals: null }
-    : await loadShelves(sb, today, sixtyDaysAgo);
+  // Only show shelves on first page with no filter — page 2+ is pure deep-browse mode
+  const showShelves = !filtersActive && page === 1;
+  const shelfQueries = showShelves
+    ? await loadShelves(sb, today, sixtyDaysAgo)
+    : { nowPlaying: null, upcoming: null, classics: null, world: null, recent: null, totals: null };
 
   // Deep browse grid (filtered or latest, paginated)
   const from = (page - 1) * PAGE_SIZE;
@@ -101,8 +102,8 @@ export default async function BrowsePage({ searchParams }: { searchParams: Promi
         </div>
       )}
 
-      {/* ─── Shelves (hidden when filter is active) ─── */}
-      {!filtersActive && shelfQueries.nowPlaying && (
+      {/* ─── Shelves (only on page 1 with no filter) ─── */}
+      {showShelves && shelfQueries.nowPlaying && (
         <>
           <Shelf
             title="Now Playing"

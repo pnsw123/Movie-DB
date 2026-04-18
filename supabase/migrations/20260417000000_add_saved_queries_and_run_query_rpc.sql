@@ -71,8 +71,15 @@ declare
 begin
   clean_query := trim(regexp_replace(trim(query_text), ';\s*$', ''));
 
+  -- Must start with SELECT
   if not (lower(clean_query) like 'select%') then
     raise exception 'Only SELECT queries are permitted.';
+  end if;
+
+  -- Block embedded semicolons — prevents multi-statement injection like
+  -- "SELECT 1; DROP TABLE movies"
+  if position(';' in clean_query) > 0 then
+    raise exception 'Only a single SELECT statement is permitted.';
   end if;
 
   execute 'select json_agg(t) from (' || clean_query || ') t' into result;

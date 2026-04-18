@@ -7,19 +7,11 @@ import { currentUser } from "@/lib/auth";
 import { year } from "@/lib/utils";
 import { RateWidget } from "@/components/rate-widget";
 import { ReviewForm } from "@/components/review-form";
-import { ScoreBadge } from "@/components/score-badge";
 import { WhereToWatch } from "@/components/where-to-watch";
 import { AddToListButton } from "@/components/add-to-list";
 import { loadUserListsForTarget } from "@/lib/lists";
 
 export const revalidate = 0;
-
-const STATUS_COPY: Record<string, { label: string; dot: string }> = {
-  ongoing:   { label: "Currently running",   dot: "#4ade80" },
-  ended:     { label: "Ended",                dot: "var(--cream-muted)" },
-  cancelled: { label: "Cancelled",            dot: "var(--terracotta)" },
-  planned:   { label: "Planned",              dot: "var(--saffron)" },
-};
 
 export default async function TvDetailPage({
   params,
@@ -47,9 +39,6 @@ export default async function TvDetailPage({
     myReview = rv ?? null;
     myLists = lists;
   }
-
-  const avg = stats?.avg_rating ? Number(stats.avg_rating) : null;
-  const status = STATUS_COPY[t.status ?? ""] ?? { label: t.status ?? "—", dot: "var(--cream-muted)" };
 
   return (
     <div className="relative">
@@ -94,16 +83,6 @@ export default async function TvDetailPage({
                   {t.last_air_date && t.last_air_date !== t.first_air_date ? `–${year(t.last_air_date)}` : ""}
                 </span>
               )}
-              {t.status && (
-                <span className="inline-flex items-center gap-2 h-7 pl-2 pr-3 rounded-sm bg-[var(--ink-lift)] border border-[var(--taupe)]/25 text-[10px] font-mono tracking-[0.22em] uppercase">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: status.dot }} />
-                  <span className="text-[var(--cream)]">{status.label}</span>
-                </span>
-              )}
-            </div>
-
-            <div className="mb-8">
-              <ScoreBadge avg={avg} totalRatings={stats?.total_ratings ?? 0} totalReviews={stats?.total_reviews ?? 0} />
             </div>
 
             {t.overview && (

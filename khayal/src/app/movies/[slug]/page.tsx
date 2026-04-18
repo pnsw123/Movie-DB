@@ -7,7 +7,6 @@ import { currentUser } from "@/lib/auth";
 import { year, runtime } from "@/lib/utils";
 import { RateWidget } from "@/components/rate-widget";
 import { ReviewForm } from "@/components/review-form";
-import { ScoreBadge, StatusBadge } from "@/components/score-badge";
 import { WhereToWatch } from "@/components/where-to-watch";
 import { AddToListButton } from "@/components/add-to-list";
 import { loadUserListsForTarget } from "@/lib/lists";
@@ -41,10 +40,6 @@ export default async function MovieDetailPage({
     myReview = rv ?? null;
     myLists = lists;
   }
-
-  const avgRating = stats?.avg_rating ? Number(stats.avg_rating) : null;
-  const totalRatings = stats?.total_ratings ?? 0;
-  const totalReviews = stats?.total_reviews ?? 0;
 
   return (
     <div className="relative">
@@ -105,12 +100,6 @@ export default async function MovieDetailPage({
               {movie.country && (
                 <span className="flex items-center gap-1.5"><Flag size={13} /> {movie.country}</span>
               )}
-              <StatusBadge releaseDate={movie.release_date} />
-            </div>
-
-            {/* The big score + counts */}
-            <div className="mb-8">
-              <ScoreBadge avg={avgRating} totalRatings={totalRatings} totalReviews={totalReviews} />
             </div>
 
             {/* Overview */}

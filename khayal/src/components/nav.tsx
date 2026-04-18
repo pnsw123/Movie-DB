@@ -31,7 +31,7 @@ export async function Nav() {
   return (
     <header className="relative z-20 border-b border-[var(--taupe)]/15">
       <div className="mx-auto max-w-[1600px] px-6 h-16 flex items-center justify-between gap-6">
-        <Link href="/browse" className="group flex items-baseline gap-2 md:gap-3 shrink-0">
+        <Link href="/" className="group flex items-baseline gap-2 md:gap-3 shrink-0">
           <span className="font-arabic text-xl md:text-2xl leading-none text-[var(--saffron)] group-hover:text-[var(--saffron-glow)] transition-colors">
             خيال
           </span>

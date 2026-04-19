@@ -38,7 +38,7 @@ export function WhereToWatch({ title, year, trailerYoutubeId }: WhereToWatchProp
       </div>
 
       <p className="text-xs text-[var(--cream-muted)] mb-3 leading-relaxed">
-        KHAYAL indexes films — we don't stream. Rentals & credits:
+        KHAYAL indexes films. We don't stream. Rentals & credits:
       </p>
       <div className="flex flex-wrap gap-2">
         {links.map((l) => (

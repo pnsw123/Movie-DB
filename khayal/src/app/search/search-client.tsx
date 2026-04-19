@@ -175,7 +175,7 @@ function SqlTab({ defaultQueries }: { defaultQueries: SavedQuery[] }) {
         </div>
 
         <p className="text-[11px] font-mono text-[var(--cream-muted)] mb-4">
-          SELECT-only sandbox. Server rejects anything else.
+          Read-only SQL. Only SELECT statements are accepted.
         </p>
 
         {err && (

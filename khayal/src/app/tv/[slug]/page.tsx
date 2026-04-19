@@ -135,7 +135,7 @@ export default async function TvDetailPage({
           {reviews.length === 0 ? (
             <div className="py-12 text-center">
               <p className="font-display italic text-xl text-[var(--cream)]/70">No voices yet.</p>
-              <p className="mt-2 text-sm text-[var(--cream-muted)]">Be the first — form above.</p>
+              <p className="mt-2 text-sm text-[var(--cream-muted)]">Be the first. Form is above.</p>
             </div>
           ) : (
             <div className="grid md:grid-cols-2 gap-5">
@@ -155,7 +155,7 @@ export default async function TvDetailPage({
                   {r.headline && <h3 className="font-display text-lg text-[var(--cream)] mb-2">{r.headline}</h3>}
                   {r.contains_spoiler ? (
                     <details className="text-sm text-[var(--cream-muted)]">
-                      <summary className="cursor-pointer text-[var(--saffron)] hover:text-[var(--saffron-glow)]">Spoilers — click to reveal</summary>
+                      <summary className="cursor-pointer text-[var(--saffron)] hover:text-[var(--saffron-glow)]">Spoilers. Click to reveal.</summary>
                       <p className="mt-2 whitespace-pre-wrap">{r.body}</p>
                     </details>
                   ) : (

@@ -36,9 +36,15 @@ export function LoginForm({
         router.push(nextPath || "/browse");
         router.refresh();
       } else {
-        const { error } = await sb.auth.signUp({ email, password });
+        const { error } = await sb.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
         if (error) { setError(error.message); return; }
-        setInfo("Account created. Check your email to confirm, then sign in.");
+        setInfo("Account created. Check your email — click the link to confirm.");
         setMode("signin");
       }
     });

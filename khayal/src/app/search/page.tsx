@@ -22,9 +22,7 @@ export default async function SearchPage() {
         }}
       />
       <div className="relative">
-        <p className="font-mono text-[11px] tracking-[0.3em] uppercase text-[var(--saffron)] mb-3 flex items-center gap-3">
-          <span className="font-arabic text-base tracking-normal">البحث</span>
-          <span className="h-px w-8 bg-[var(--saffron)]/40" />
+        <p className="font-mono text-[11px] tracking-[0.3em] uppercase text-[var(--saffron)] mb-3">
           Search the Reels
         </p>
         <h1 className="font-display text-[clamp(2.25rem,4.5vw,3.75rem)] leading-[0.95] text-[var(--cream)] mb-10">

@@ -107,7 +107,7 @@ export default async function ProfilePage() {
           <div className="p-8 rounded-sm bg-[var(--ink-lift)] border border-dashed border-[var(--taupe)]/25 text-center">
             <p className="font-display italic text-lg text-[var(--cream)]/70">No lists yet.</p>
             <p className="mt-1 text-sm text-[var(--cream-muted)]">
-              Add a film from its detail page — a Favorites list will auto-create.
+              Add a film from its detail page. A Favorites list will auto-create.
             </p>
           </div>
         ) : (

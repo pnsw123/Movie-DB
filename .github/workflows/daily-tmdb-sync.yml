@@ -1,0 +1,63 @@
+name: Daily TMDB sync
+
+# Run every day at 06:00 UTC (~1 AM US Eastern) + allow manual trigger.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      movies:
+        description: "How many movies to pull from popular/top_rated/now_playing/upcoming"
+        default: "200"
+      tv:
+        description: "How many TV series to pull"
+        default: "60"
+
+jobs:
+  sync:
+    name: Pull fresh titles + trailers from TMDB
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Python deps
+        run: pip install -r scripts/requirements.txt
+
+      - name: Pull latest titles from TMDB
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python scripts/seed_tmdb.py \
+            --movies "${{ inputs.movies || '200' }}" \
+            --tv     "${{ inputs.tv     || '60'  }}" \
+            --sources popular,top_rated,now_playing,upcoming \
+            --sleep 0.05
+
+      - name: Backfill tmdb_id on any rows missing it
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python scripts/backfill_tmdb_id.py --kind movies    --sleep 0.04 --limit 500 || true
+          python scripts/backfill_tmdb_id.py --kind tv_series --sleep 0.04 --limit 200 || true
+
+      - name: Fetch trailers for newly-matched rows
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python scripts/fetch_trailers.py --kind movies    --sleep 0.04 --limit 500 || true
+          python scripts/fetch_trailers.py --kind tv_series --sleep 0.04 --limit 200 || true
+
+      - name: Summary
+        run: echo "✅ Daily TMDB sync complete"

@@ -100,7 +100,7 @@ export default async function ListPage({
         <div className="py-20 text-center">
           <p className="font-display italic text-xl text-[var(--cream)]/70">Empty shelf.</p>
           <p className="mt-2 text-sm text-[var(--cream-muted)]">
-            {isOwner ? "Add films from their detail pages — look for “Add to list.”" : "Nothing on this list yet."}
+            {isOwner ? "Add films from their detail pages. Look for “Add to list.”" : "Nothing on this list yet."}
           </p>
         </div>
       ) : (

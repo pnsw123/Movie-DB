@@ -144,7 +144,7 @@ export function ReviewForm({ userId, kind, targetId, slug, existing }: ReviewFor
           onChange={(e) => setSpoiler(e.target.checked)}
           className="h-4 w-4 rounded-sm accent-[var(--saffron)]"
         />
-        Contains spoilers — hide body behind a reveal
+        Contains spoilers. Hide body behind a reveal.
       </label>
 
       {err && (

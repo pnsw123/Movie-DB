@@ -116,6 +116,7 @@ def transform_movie(m: dict) -> dict | None:
     return {
         "title":             title[:500],
         "slug":              make_slug(title, year),
+        "tmdb_id":           m.get("id"),
         "release_date":      release or None,
         "runtime_minutes":   m.get("runtime") or None,
         "age_rating":        age_rating,
@@ -139,6 +140,7 @@ def transform_tv(t: dict) -> dict | None:
     return {
         "title":          title[:500],
         "slug":           make_slug(title, year),
+        "tmdb_id":        t.get("id"),
         "first_air_date": first_air or None,
         "last_air_date":  t.get("last_air_date") or None,
         "status":         status,

@@ -55,6 +55,7 @@ def transform_movie(m: dict) -> dict | None:
     return {
         "title":             title[:500],
         "slug":              make_slug(title, y),
+        "tmdb_id":           m.get("id"),
         "release_date":      release or None,
         "runtime_minutes":   m.get("runtime") or None,
         "age_rating":        age_rating,

@@ -55,6 +55,7 @@ def transform_tv(t: dict) -> dict | None:
     return {
         "title":          title[:500],
         "slug":           make_slug(title, y),
+        "tmdb_id":        t.get("id"),
         "first_air_date": first_air or None,
         "last_air_date":  t.get("last_air_date") or None,
         "status":         status,

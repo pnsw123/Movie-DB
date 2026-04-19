@@ -93,24 +93,27 @@ def main():
 
     print(f"🔍  Backfilling tmdb_id on public.{args.kind}")
 
-    # Pull all rows still missing tmdb_id
-    page_size = 1000
-    offset = 0
+    # Pull all rows still missing tmdb_id. NOTE: we keep fetching from id=0
+    # (no running offset) because updated rows drop out of the filter — an
+    # incremented offset would skip remaining unmatched rows.
+    page_size = 500
     total = 0
     matched = 0
     skipped = 0
+    last_id = 0
     while True:
-        q = (sb.table(args.kind)
-               .select(f"id, title, slug, {date_col}")
-               .is_("tmdb_id", "null")
-               .order("id")
-               .range(offset, offset + page_size - 1))
-        res = q.execute()
-        rows = res.data or []
+        rows = (sb.table(args.kind)
+                  .select(f"id, title, slug, {date_col}")
+                  .is_("tmdb_id", "null")
+                  .gt("id", last_id)
+                  .order("id")
+                  .limit(page_size)
+                  .execute().data or [])
         if not rows: break
 
         for row in rows:
             total += 1
+            last_id = row["id"]
             if args.limit and total > args.limit:
                 print(f"✅  hit --limit={args.limit}");
                 return
@@ -125,18 +128,15 @@ def main():
                 try:
                     sb.table(args.kind).update({"tmdb_id": tmdb_id}).eq("id", row["id"]).execute()
                     matched += 1
-                except Exception as e:
+                except Exception:
                     # Unique conflict — another row already claims this tmdb_id.
-                    # Leave as null; we'll dedup in another pass if needed.
                     skipped += 1
             else:
                 skipped += 1
 
             if total % 50 == 0:
-                print(f"   ↳ scanned={total}  matched={matched}  skipped={skipped}")
+                print(f"   ↳ scanned={total}  matched={matched}  skipped={skipped}  last_id={last_id}")
             if args.sleep: time.sleep(args.sleep)
-
-        offset += page_size
 
     print(f"✅  done · scanned={total}  matched={matched}  skipped={skipped}")
 

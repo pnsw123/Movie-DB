@@ -27,7 +27,8 @@
 | Styling | Tailwind CSS v4 |
 | Database | Supabase (PostgreSQL) |
 | Auth | Supabase Auth — email + password |
-| Search | Postgres full-text search (`tsvector` + GIN indexes + `plainto_tsquery`) |
+| Search (Phase 1 · live) | Postgres full-text search — `tsvector` + GIN indexes + `plainto_tsquery`, exposed via `search_movies` / `search_tv_series` / `search_all` RPCs |
+| Search (Phase 2 · planned) | [Typesense](https://typesense.org/) for typo tolerance + faceted filters + sub-10ms response. Not yet wired; Phase 1 FTS serves today. |
 | Data source | [TMDB](https://www.themoviedb.org/) via the TMDB API v3 |
 | Hosting | [Vercel](https://vercel.com) (hobby tier, auto-deploy on push to `main`) |
 | Fonts | Fraunces (display) · Inter (body) · JetBrains Mono (code) · Reem Kufi (Arabic) |

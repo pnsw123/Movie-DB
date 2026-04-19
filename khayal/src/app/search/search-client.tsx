@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { supabaseBrowser } from "@/lib/supabase-browser";
 import { MovieCard } from "@/components/movie-card";
 import { cn } from "@/lib/utils";
@@ -50,41 +50,53 @@ function FindTab() {
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<SearchAllRow[]>([]);
   const [pending, start] = useTransition();
-  const [touched, setTouched] = useState(false);
+  const reqIdRef = useRef(0);
 
-  const run = (text: string) => {
-    setTouched(true);
-    if (!text.trim()) { setRows([]); return; }
-    start(async () => {
-      const sb = supabaseBrowser();
-      const { data } = await sb.rpc("search_all", { query_text: text, page_size: 30 });
-      setRows((data ?? []) as SearchAllRow[]);
-    });
-  };
+  // Live search: 200ms debounce on `q`. Min 2 chars. Stale-response guard via reqId.
+  useEffect(() => {
+    const text = q.trim();
+    if (text.length < 2) {
+      setRows([]);
+      return;
+    }
+    const handle = setTimeout(() => {
+      const myId = ++reqIdRef.current;
+      start(async () => {
+        const sb = supabaseBrowser();
+        const { data } = await sb.rpc("search_all", { query_text: text, page_size: 30 });
+        // Drop result if a newer query has fired since we started.
+        if (myId !== reqIdRef.current) return;
+        setRows((data ?? []) as SearchAllRow[]);
+      });
+    }, 200);
+    return () => clearTimeout(handle);
+  }, [q]);
+
+  const touched = q.trim().length >= 2;
 
   return (
     <div>
-      <form onSubmit={(e) => { e.preventDefault(); run(q); }} className="relative mb-10">
+      <form onSubmit={(e) => e.preventDefault()} className="relative mb-10">
         <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--cream-muted)]" />
         <input
           autoFocus
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Title, phrase, idea…"
-          className="w-full h-14 pl-12 pr-28 rounded-sm text-base bg-[var(--ink-lift)] border border-[var(--taupe)]/25 text-[var(--cream)] placeholder:text-[var(--cream-muted)]/60 focus:outline-none focus:border-[var(--saffron)]/60"
+          className="w-full h-14 pl-12 pr-12 rounded-sm text-base bg-[var(--ink-lift)] border border-[var(--taupe)]/25 text-[var(--cream)] placeholder:text-[var(--cream-muted)]/60 focus:outline-none focus:border-[var(--saffron)]/60"
         />
-        <button
-          type="submit"
-          className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-4 rounded-sm bg-[var(--saffron)] text-[var(--ink)] text-sm font-medium hover:bg-[var(--saffron-glow)] inline-flex items-center gap-2"
-        >
-          {pending ? <LoaderCircle size={14} className="animate-spin" /> : <Search size={14} />} Search
-        </button>
+        {pending && (
+          <LoaderCircle
+            size={16}
+            className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-[var(--saffron)]"
+          />
+        )}
       </form>
 
       {!touched && (
         <p className="text-sm text-[var(--cream-muted)]">
-          Full-text search across 3,400+ films and 1,000+ TV series. Matches across titles and overviews,
-          ranked by relevance.
+          Full-text search across 7,400+ films and 2,800+ TV series. Matches across titles and overviews,
+          ranked by relevance. Just start typing.
         </p>
       )}
 

@@ -14,6 +14,8 @@ export type Movie = {
   overview: string | null;
   poster_url: string | null;
   backdrop_url: string | null;
+  tmdb_id: number | null;
+  trailer_youtube_id: string | null;
   relevance?: number;
 };
 
@@ -27,6 +29,8 @@ export type TvSeries = {
   overview: string | null;
   poster_url: string | null;
   backdrop_url: string | null;
+  tmdb_id: number | null;
+  trailer_youtube_id: string | null;
   relevance?: number;
 };
 

@@ -1,8 +1,10 @@
-import { ExternalLink, Play } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import { Trailer } from "./trailer";
 
 export interface WhereToWatchProps {
   title: string;
   year: string | null;
+  trailerYoutubeId?: string | null;
 }
 
 /**
@@ -11,10 +13,9 @@ export interface WhereToWatchProps {
  * right external source (trailer on YouTube, rentals via JustWatch, credits
  * via Letterboxd / IMDb).
  */
-export function WhereToWatch({ title, year }: WhereToWatchProps) {
+export function WhereToWatch({ title, year, trailerYoutubeId }: WhereToWatchProps) {
   const qBase  = `${title} ${year ?? ""}`.trim();
   const q      = encodeURIComponent(qBase);
-  const qTrailer = encodeURIComponent(`${qBase} official trailer`);
 
   const links = [
     { label: "JustWatch",    href: `https://www.justwatch.com/us/search?q=${q}` },
@@ -31,17 +32,10 @@ export function WhereToWatch({ title, year }: WhereToWatchProps) {
         <p className="font-arabic text-xs text-[var(--saffron)]/70">أين تشاهد</p>
       </div>
 
-      {/* Prominent trailer CTA */}
-      <a
-        href={`https://www.youtube.com/results?search_query=${qTrailer}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="group w-full inline-flex items-center gap-3 h-11 px-4 mb-4 rounded-sm bg-[var(--saffron)] text-[var(--ink)] text-sm font-medium hover:bg-[var(--saffron-glow)] transition-colors shadow-[0_0_18px_-6px_var(--saffron)]"
-      >
-        <Play size={14} className="fill-[var(--ink)]" />
-        Watch trailer
-        <ExternalLink size={11} className="ml-auto opacity-70 group-hover:opacity-100" />
-      </a>
+      {/* Trailer — embed if we have a TMDB-sourced id, else YouTube search */}
+      <div className="mb-4">
+        <Trailer youtubeId={trailerYoutubeId ?? null} title={title} year={year} className="w-full" />
+      </div>
 
       <p className="text-xs text-[var(--cream-muted)] mb-3 leading-relaxed">
         KHAYAL indexes films — we don't stream. Rentals & credits:

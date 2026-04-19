@@ -133,7 +133,11 @@ export default async function MovieDetailPage({
 
         {/* ─── Where to watch + review form row ─── */}
         <div className="grid md:grid-cols-[320px_1fr] gap-6 mb-14">
-          <WhereToWatch title={movie.title} year={year(movie.release_date)} />
+          <WhereToWatch
+            title={movie.title}
+            year={year(movie.release_date)}
+            trailerYoutubeId={movie.trailer_youtube_id}
+          />
           <ReviewForm
             userId={user?.id ?? null}
             kind="movie"

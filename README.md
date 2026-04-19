@@ -29,7 +29,7 @@
 | Auth | Supabase Auth — email + password |
 | Search (Phase 1 · live) | Postgres full-text search — `tsvector` + GIN indexes + `plainto_tsquery`, exposed via `search_movies` / `search_tv_series` / `search_all` RPCs |
 | Search (Phase 2 · planned) | [Typesense](https://typesense.org/) for typo tolerance + faceted filters + sub-10ms response. Not yet wired; Phase 1 FTS serves today. |
-| Data source | [TMDB](https://www.themoviedb.org/) via the TMDB API v3 |
+| Data source | [TMDB](https://github.com/themoviedb) via the TMDB API v3 |
 | Hosting | [Vercel](https://vercel.com) (hobby tier, auto-deploy on push to `main`) |
 | Fonts | Fraunces (display) · Inter (body) · JetBrains Mono (code) · Reem Kufi (Arabic) |
 | Seeding | Python + `tmdbv3api` + `python-slugify` + `supabase-py` |
@@ -141,5 +141,5 @@ python scripts/seed_tv_by_language.py --lang ko --pages 15
 
 ## Credits
 
-- Film and series data © [The Movie Database (TMDB)](https://www.themoviedb.org/). This product uses the TMDB API but is not endorsed or certified by TMDB.
+- Film and series data © [The Movie Database (TMDB)](https://github.com/themoviedb). This product uses the TMDB API but is not endorsed or certified by TMDB.
 - **خيال** (*khayāl*) — Arabic for *imagination* / *fantasy* / *shadow play*.

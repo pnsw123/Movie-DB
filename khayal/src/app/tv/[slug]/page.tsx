@@ -113,7 +113,11 @@ export default async function TvDetailPage({
         </div>
 
         <div className="grid md:grid-cols-[320px_1fr] gap-6 mb-14">
-          <WhereToWatch title={t.title} year={year(t.first_air_date)} />
+          <WhereToWatch
+            title={t.title}
+            year={year(t.first_air_date)}
+            trailerYoutubeId={t.trailer_youtube_id}
+          />
           <ReviewForm
             userId={user?.id ?? null}
             kind="tv_series"

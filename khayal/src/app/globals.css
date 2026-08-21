@@ -1,4 +1,11 @@
 @import "tailwindcss";
+/* Untitled UI (free, MIT) theme + Khayal token bridge — imported BEFORE our
+   own @theme so Khayal's fonts/tokens below win on any overlap. */
+@import "../styles/untitled-theme.css";
+@import "../styles/untitled-khayal.css";
+
+@plugin "tailwindcss-react-aria-components";
+@plugin "tailwindcss-animate";
 
 /* ─── KHAYAL Cinema palette ───────────────────────────────────────────────── */
 :root {

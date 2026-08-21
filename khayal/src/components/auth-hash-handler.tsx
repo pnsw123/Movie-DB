@@ -60,18 +60,20 @@ export function AuthHashHandler() {
       });
       if (cancelled) return;
 
-      // Remove the tokens from the address bar regardless of outcome.
-      window.history.replaceState(null, "", window.location.pathname);
-
       if (error) {
+        // Strip the tokens from the address bar, then surface the error on /login.
+        window.history.replaceState(null, "", window.location.pathname);
         router.replace(`/login?error=${encodeURIComponent(error.message)}`);
         return;
       }
 
-      // Session is now in cookies — go to the app and force an RSC refresh so
-      // the server renders the authenticated view.
-      router.replace("/browse");
-      router.refresh();
+      // Session is now persisted to cookies. Do a full-document navigation to
+      // /browse so the server route re-renders with the authenticated session.
+      // A full navigation (not router.replace) is used deliberately: it drops
+      // the #access_token hash and guarantees the server reads the new auth
+      // cookie. Calling history.replaceState first would desync the Next router
+      // and make router.replace("/browse") a no-op (it then stays on "/").
+      window.location.replace("/browse");
     })();
 
     return () => {

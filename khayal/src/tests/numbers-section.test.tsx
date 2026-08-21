@@ -20,11 +20,10 @@ import { NumbersSection, STATS } from "@/components/landing/numbers-section";
 const counts = { films: 8105, series: 2980, people: 13086 };
 
 describe("NumbersSection", () => {
-  it("renders the three stats with their labels and Arabic bylines", () => {
+  it("renders the three stats with their labels", () => {
     render(<NumbersSection counts={counts} />);
     for (const s of STATS) {
       expect(screen.getByText(s.label)).toBeInTheDocument();
-      expect(screen.getByText(s.arabic)).toBeInTheDocument();
     }
     expect(screen.getByText("By the numbers بالأرقام")).toBeInTheDocument();
   });
@@ -36,8 +35,12 @@ describe("NumbersSection", () => {
     expect(screen.getByTestId("stat-people").querySelector("[data-testid='count-up']")).toHaveAttribute("aria-label", "13,086");
   });
 
-  it("renders a featured icon per stat", () => {
+  it("shows no icons and no Arabic bylines under the labels", () => {
     render(<NumbersSection counts={counts} />);
-    expect(document.querySelectorAll("[data-featured-icon]")).toHaveLength(3);
+    expect(document.querySelectorAll("[data-featured-icon]")).toHaveLength(0);
+    expect(document.querySelectorAll("svg")).toHaveLength(0);
+    expect(screen.queryByText("فيلم مفهرس")).toBeNull();
+    expect(screen.queryByText("مسلسل مفهرس")).toBeNull();
+    expect(screen.queryByText("شخص مفهرس")).toBeNull();
   });
 });

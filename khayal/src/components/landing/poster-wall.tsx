@@ -26,7 +26,9 @@ interface ColumnProps {
 }
 
 function Column({ posters, drift, progress, className }: ColumnProps) {
-  const y = useTransform(progress, [0, 1], [drift, -drift]);
+  // Every column starts at rest (y = 0) when the section enters, so nothing
+  // overlaps the heading above; it then drifts 2×drift over the scroll pass.
+  const y = useTransform(progress, [0, 1], [0, -2 * drift]);
   return (
     <motion.div style={{ y }} className={className} data-testid="poster-column">
       {posters.map((p, i) => (
@@ -92,7 +94,7 @@ export function PosterWall({ posters }: PosterWallProps) {
       style={{ background: "var(--ink)" }}
     >
       <div className="mx-auto max-w-[1200px]">
-        <div className="mb-12 flex flex-col items-start gap-4">
+        <div className="mb-24 flex flex-col items-start gap-4 md:mb-32">
           <Badge type="pill-color" color="gray" size="md" className="font-mono text-[11px] tracking-[0.2em] uppercase">
             Most popular · الأكثر رواجًا
           </Badge>

@@ -3,7 +3,7 @@ import { Playfair_Display, DM_Sans, JetBrains_Mono, Reem_Kufi } from "next/font/
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { NavGuard } from "@/components/nav-guard";
-import { TmdbAttribution } from "@/components/tmdb-attribution";
+import { SiteFooter } from "@/components/site-footer";
 import { currentUser } from "@/lib/auth";
 
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-fraunces", display: "swap", style: ["normal","italic"] });
@@ -30,22 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="min-h-full flex flex-col bg-[var(--ink)] text-[var(--cream)]">
         <NavGuard><Nav /></NavGuard>
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-[var(--taupe)]/15 mt-16">
-          <div className="mx-auto max-w-[1600px] px-6 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div>
-              <p className="font-display text-lg text-[var(--cream)]">KHAYAL <span className="font-arabic text-[var(--saffron)]">خيال</span></p>
-            </div>
-            <div className="flex flex-wrap gap-x-8 gap-y-2 text-xs text-[var(--cream-muted)] font-mono tracking-wide">
-              <a href="/browse" className="hover:text-[var(--saffron)] transition-colors">Browse</a>
-              <a href="/search" className="hover:text-[var(--saffron)] transition-colors">Search</a>
-              {user
-                ? <a href="/profile" className="hover:text-[var(--saffron)] transition-colors">Profile</a>
-                : <a href="/login"   className="hover:text-[var(--saffron)] transition-colors">Sign In</a>
-              }
-            </div>
-            <TmdbAttribution />
-          </div>
-        </footer>
+        <SiteFooter signedIn={!!user} />
       </body>
     </html>
   );

@@ -5,15 +5,13 @@
 // https://motion.dev/docs/react-scroll-animations
 
 import { motion, useReducedMotion, type Variants } from "motion/react";
-import { Film01, Tv01, Users01 } from "@untitledui/icons";
-import { FeaturedIcon } from "@/components/untitled/featured-icon";
 import { CountUp } from "./count-up";
 import type { LandingCounts } from "@/lib/landing";
 
 export const STATS = [
-  { key: "films", label: "Films catalogued", arabic: "فيلم مفهرس", icon: Film01 },
-  { key: "series", label: "Series catalogued", arabic: "مسلسل مفهرس", icon: Tv01 },
-  { key: "people", label: "People indexed", arabic: "شخص مفهرس", icon: Users01 },
+  { key: "films", label: "Films catalogued" },
+  { key: "series", label: "Series catalogued" },
+  { key: "people", label: "People indexed" },
 ] as const;
 
 const list: Variants = {
@@ -57,7 +55,6 @@ export function NumbersSection({ counts }: NumbersSectionProps) {
               className="flex flex-col items-center gap-4 text-center"
               data-testid={`stat-${stat.key}`}
             >
-              <FeaturedIcon icon={stat.icon} color="brand" theme="modern" size="lg" />
               <p
                 className="font-display leading-none"
                 style={{ fontSize: "clamp(3.5rem, 7vw, 6rem)", color: "var(--cream)", letterSpacing: "-0.04em" }}
@@ -66,9 +63,6 @@ export function NumbersSection({ counts }: NumbersSectionProps) {
               </p>
               <p className="font-mono text-[11px] tracking-[0.3em] uppercase" style={{ color: "var(--cream-muted)" }}>
                 {stat.label}
-              </p>
-              <p className="font-arabic text-sm" style={{ color: "var(--saffron)" }}>
-                {stat.arabic}
               </p>
             </motion.li>
           ))}

@@ -1,6 +1,21 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { Button } from "@/components/untitled/button";
+import { cx } from "@/lib/cx";
+import { isReactComponent } from "@/lib/is-react-component";
+
+describe("Untitled utils", () => {
+  it("cx merges conflicting tailwind classes, last wins", () => {
+    expect(cx("text-sm", "text-md")).toBe("text-md");
+    expect(cx("p-2", undefined, false, "p-4")).toBe("p-4");
+  });
+
+  it("isReactComponent distinguishes components from elements", () => {
+    expect(isReactComponent(Button)).toBe(true);
+    expect(isReactComponent(<span />)).toBe(false);
+    expect(isReactComponent(undefined)).toBe(false);
+  });
+});
 
 describe("Untitled UI Button (verbatim port)", () => {
   it("renders an anchor when href is given", () => {

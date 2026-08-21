@@ -30,24 +30,13 @@ describe("RootLayout source contract", () => {
     expect(src).toContain("Nav");
   });
 
-  it("renders TmdbAttribution in footer", () => {
-    expect(src).toContain("TmdbAttribution");
+  it("renders the SiteFooter component, telling it whether a user is signed in", () => {
+    expect(src).toContain('import { SiteFooter } from "@/components/site-footer"');
+    expect(src).toContain("<SiteFooter signedIn={!!user} />");
   });
 
-  it("renders Browse footer link", () => {
-    expect(src).toContain("/browse");
-  });
-
-  it("renders Search footer link", () => {
-    expect(src).toContain("/search");
-  });
-
-  it("shows Profile link when user logged in", () => {
-    expect(src).toContain("/profile");
-  });
-
-  it("shows Sign In link when user not logged in", () => {
-    expect(src).toContain("/login");
+  it("no longer inlines footer markup (links live in SiteFooter and its own test)", () => {
+    expect(src).not.toContain("<footer");
   });
 
   it("uses Playfair Display font", () => {

@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase-server";
+import { getLandingData } from "@/lib/landing";
 import { HeroSection } from "@/components/landing/hero-section";
-import { StatsSection } from "@/components/landing/stats-section";
-import { CTASection } from "@/components/landing/cta-section";
-import { GallerySection } from "@/components/landing/gallery-section";
-import { ScrollReveal } from "@/components/landing/scroll-reveal";
+import { PosterWall } from "@/components/landing/poster-wall";
+import { NumbersSection } from "@/components/landing/numbers-section";
+import { CtaReveal } from "@/components/landing/cta-reveal";
 import { AuthHashHandler } from "@/components/auth-hash-handler";
 
 export default async function HomePage({
@@ -26,35 +26,7 @@ export default async function HomePage({
   }
 
   const sb = await supabaseServer();
-
-  const { data: featuredRaw } = await sb
-    .from("movie_stats")
-    .select("movie_id, avg_rating, movies!inner(title, slug, poster_url)")
-    .order("avg_rating", { ascending: false })
-    .not("movies.poster_url", "is", null)
-    .limit(20);
-
-  const [{ count: filmCount }, { count: ratingCount }, { count: reviewCount }] =
-    await Promise.all([
-      sb.from("movies").select("*", { count: "exact", head: true }),
-      sb.from("movie_ratings").select("*", { count: "exact", head: true }),
-      sb.from("movie_reviews").select("*", { count: "exact", head: true }),
-    ]);
-
-  const featured = (featuredRaw ?? []).map((row) => {
-    const m = Array.isArray(row.movies) ? row.movies[0] : row.movies;
-    return {
-      movie_id: row.movie_id as number,
-      avg_rating: row.avg_rating as number,
-      movies: m as { title: string; slug: string; poster_url: string },
-    };
-  });
-
-  // Proxy TMDB images so WebGL textures can load (CORS fix)
-  const galleryItems = featured.map((f) => ({
-    image: `/api/image-proxy?url=${encodeURIComponent(f.movies.poster_url)}`,
-    text: f.movies.title,
-  }));
+  const { posters, counts, backdrop } = await getLandingData(sb);
 
   return (
     <main>
@@ -65,22 +37,14 @@ export default async function HomePage({
       {/* Section 1 — Hero (above the fold, animates on load) */}
       <HeroSection />
 
-      {/* Section 2 — Circular gallery */}
-      <ScrollReveal>
-        <GallerySection items={galleryItems} />
-      </ScrollReveal>
+      {/* Section 2 — Parallax poster wall */}
+      <PosterWall posters={posters} />
 
-      {/* Section 3 — Stats (per-card spring reveal handled inside the section) */}
-      <StatsSection
-        filmCount={filmCount ?? 0}
-        ratingCount={ratingCount ?? 0}
-        reviewCount={reviewCount ?? 0}
-      />
+      {/* Section 3 — Numbers, stagger in + count up once */}
+      <NumbersSection counts={counts} />
 
-      {/* Section 4 — CTA */}
-      <ScrollReveal>
-        <CTASection />
-      </ScrollReveal>
+      {/* Section 4 — CTA over a film still that un-curtains on scroll */}
+      <CtaReveal backdrop={backdrop} counts={counts} />
     </main>
   );
 }

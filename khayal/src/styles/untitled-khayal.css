@@ -1,0 +1,85 @@
+/*
+ * Untitled UI → Khayal token bridge.
+ *
+ * `untitled-theme.css` is the upstream theme file, verbatim
+ * (github.com/untitleduico/react, MIT). Its semantic tokens default to a
+ * light palette. This file points the tokens our ported primitives
+ * (Button, Badge, FeaturedIcon) actually reference at Khayal's existing
+ * CSS variables from globals.css. No new colours are introduced.
+ *
+ * Unlayered `:root` here beats the `@layer base` definitions upstream.
+ */
+
+:root {
+  /* Surfaces */
+  --color-bg-primary: var(--ink-lift);
+  --color-bg-primary_hover: var(--ink-high);
+  --color-bg-primary_alt: var(--ink-lift);
+  --color-bg-secondary: var(--ink-high);
+  --color-bg-secondary_alt: var(--ink-high);
+  --color-bg-tertiary: var(--ink-high);
+  --color-bg-brand-solid: var(--accent);
+  --color-bg-brand-solid_hover: var(--cream);
+  --color-bg-brand-secondary: var(--ink-high);
+  --color-bg-secondary-solid: var(--taupe);
+
+  /* Text */
+  --color-text-primary: var(--cream);
+  --color-text-secondary: var(--cream);
+  --color-text-secondary_hover: var(--cream);
+  --color-text-tertiary: var(--cream-muted);
+  --color-text-tertiary_hover: var(--cream);
+  --color-text-brand-secondary: var(--saffron);
+  --color-text-brand-secondary_hover: var(--saffron-glow);
+
+  /* Foreground (icons) */
+  --color-fg-primary: var(--cream);
+  --color-fg-secondary: var(--cream-muted);
+  --color-fg-tertiary: var(--cream-muted);
+  --color-fg-quaternary: var(--cream-muted);
+  --color-fg-quaternary_hover: var(--cream);
+  --color-fg-brand-primary: var(--saffron);
+  --color-fg-brand-secondary_alt: var(--saffron);
+  --color-fg-brand-secondary_hover: var(--saffron-glow);
+  --color-fg-white: var(--ink);
+
+  /* Borders / rings / focus */
+  --color-border-primary: var(--taupe);
+  --color-border-secondary: var(--taupe);
+  --color-border-secondary_alt: var(--taupe);
+  --color-border-brand: var(--accent);
+  --color-border-brand_alt: var(--accent);
+  --color-focus-ring: var(--accent);
+
+  /* Badge utility palettes (gray + brand only — the two we use) */
+  --color-utility-neutral-50: var(--ink-high);
+  --color-utility-neutral-100: var(--ink-high);
+  --color-utility-neutral-200: var(--taupe);
+  --color-utility-neutral-400: var(--cream-muted);
+  --color-utility-neutral-500: var(--cream-muted);
+  --color-utility-neutral-700: var(--cream);
+  --color-utility-brand-50: var(--ink-high);
+  --color-utility-brand-100: var(--ink-high);
+  --color-utility-brand-200: var(--taupe);
+  --color-utility-brand-400: var(--saffron);
+  --color-utility-brand-500: var(--saffron);
+  --color-utility-brand-700: var(--saffron-glow);
+
+  /* FeaturedIcon "light" theme foregrounds */
+  --color-featured-icon-light-fg-brand: var(--saffron);
+  --color-featured-icon-light-fg-gray: var(--cream-muted);
+}
+
+/* Upstream theme re-sizes `text-xs` / `text-xl` line-heights by 2px.
+   Pin Tailwind's defaults so the rest of the app is untouched. */
+@theme {
+  --text-xs--line-height: calc(1 / 0.75);
+  --text-xl--line-height: calc(1.75 / 1.25);
+}
+
+/* From upstream styles/globals.css — used by Button. */
+@utility transition-inherit-all {
+  transition-property: inherit;
+  transition-duration: inherit;
+  transition-timing-function: inherit;
+}
